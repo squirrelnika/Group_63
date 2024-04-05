@@ -46,10 +46,14 @@ def generate_moves(symbols, score, player):
                 temp_score[1]+=1
                 move = [new_symbols,temp_score]
                 moves.append(move)
+    #print(moves)
+    #print()
     return moves
     
 # Recursive function to build the game tree
-def build_game_tree(node, player):
+def build_game_tree(node, player, depth):
+    if depth == 0:
+        return
     current_symbols = node.state
     current_score = node.score
     #current_value = node.value
@@ -58,7 +62,7 @@ def build_game_tree(node, player):
     moves = generate_moves(current_symbols, current_score, player)
     for move in moves:
         child_node = node.add_child(move[0],move[1])
-        build_game_tree(child_node, next_player)
+        build_game_tree(child_node, next_player, depth-1)
 
 
 # Initial symbols list
@@ -69,7 +73,7 @@ initial_score = [0,0]
 root = TreeNode(initial_symbols, initial_score)
 
 # Build the game tree
-build_game_tree(root, "O")
+build_game_tree(root, "O", 2)
 
 # Print the initial symbols and the first level of child moves
 print("Initial symbols:")
@@ -95,4 +99,3 @@ for child in root.children:
             print()
             print(greatgrandchild.score)
             print()
-#some change

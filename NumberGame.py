@@ -160,6 +160,12 @@ def player_move(clicked_symbol, node):
             return True
         else:
             return False
+        
+#Function for computer to make move/ to be edited
+def computer_move(node):
+    for child in node.children:
+        pass
+
 
 
 # Function to make a move and update points
