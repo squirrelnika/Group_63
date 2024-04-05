@@ -6,8 +6,8 @@ import sys
 pygame.init()
 
 # Constants
-WIDTH = 1200
-HEIGHT = 600
+WIDTH = 1440
+HEIGHT = 500
 FPS = 30
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -24,22 +24,25 @@ CROSS = "X"
 def draw_text(surface, text, font, color, x, y):
     text_surface = font.render(text, True, color)
     text_rect = text_surface.get_rect()
-    text_rect.midtop = (x, y)
+    text_rect.topleft = (x, y)
     surface.blit(text_surface, text_rect)
 
 
 # Function to generate the initial string of symbols
 def generate_symbols(length):
-    symbols = [CROSS if random.random() < 0.5 else CIRCLE for _ in range(length)]
+    symbols = [
+        CROSS if random.random() < 0.5 else CIRCLE for _ in range(length)
+    ]
     return symbols
 
 
-# Function to draw symbols on the screen
+# Function to draw symbols on the screen and return rectangles around each symbol
 def draw_symbols(symbols):
     symbol_size = 40
-    x_offset = (WIDTH - (symbol_size * len(symbols))) // 2
+    x_offset = 50  # Left align symbols
     y = HEIGHT // 2
-    for symbol in symbols:
+    symbol_rects = []  # List to store rectangles around symbols
+    for index, symbol in enumerate(symbols):
         if symbol == CROSS:
             pygame.draw.line(
                 screen,
@@ -63,7 +66,10 @@ def draw_symbols(symbols):
                 symbol_size // 2 - 5,
                 3,
             )
-        x_offset += symbol_size
+        symbol_rects.append(
+            pygame.Rect(x_offset + 20, y, symbol_size, symbol_size))
+        x_offset += symbol_size + 10  # Increase x_offset for next symbol
+    return symbol_rects
 
 
 # Function to draw scores on the screen
@@ -72,9 +78,8 @@ def draw_scores(player_points):
     text1 = font.render(f"Circles: {player_points[0]}", True, RED)
     text2 = font.render(f"Crosses: {player_points[1]}", True, BLUE)
     screen.blit(text1, (10, 10))  # Circles score in top left corner
-    screen.blit(
-        text2, (WIDTH - text2.get_width() - 10, 10)
-    )  # Crosses score in top right corner
+    screen.blit(text2, (WIDTH - text2.get_width() - 10,
+                        10))  # Crosses score in top right corner
 
 
 # Function to display the player turn on the screen
@@ -84,46 +89,62 @@ def display_player_turn(player):
         text = font.render("Player's Turn: Circles", True, RED)
     else:
         text = font.render("Player's Turn: Crosses", True, BLUE)
-    screen.blit(text, (WIDTH // 2, 50))  # Display at the top center
+    screen.blit(text, (WIDTH // 2 - 200, 50))  # Display at the top center
+
+    # Additional text below player's turn display
+    gameinfo_text = font.render(
+        "Press between two valid symbols to make a turn", True, BLACK)
+    screen.blit(gameinfo_text, (WIDTH // 2 - 280, 100))
 
 
 # Function to make a move and update points
-def make_move(symbols, player_points, current_player):
-    # Find the first occurrence of XX=O or XO=O for circles
-    if current_player == 0:  # Circles
-        index = 0
-        while index < len(symbols) - 1:
-            if symbols[index] == CROSS and symbols[index + 1] == CROSS:
-                symbols[index] = CIRCLE
-                symbols.pop(index + 1)
+def make_move(symbols, player_points, current_player, clicked_symbol):
+    # Check if the clicked symbols are within the bounds of the current symbol array
+    if clicked_symbol < len(symbols) - 1:
+        if current_player == 0:  # Circles
+            if (symbols[clicked_symbol] == CROSS
+                    and symbols[clicked_symbol + 1] == CROSS):
+                symbols[clicked_symbol] = CIRCLE
+                symbols.pop(clicked_symbol + 1)
                 player_points[0] += 2
-                return
-            elif symbols[index] == CROSS and symbols[index + 1] == CIRCLE:
-                symbols[index] = CIRCLE
-                symbols.pop(index + 1)
+                return True
+            elif (symbols[clicked_symbol] == CROSS
+                  and symbols[clicked_symbol + 1] == CIRCLE):
+                symbols[clicked_symbol] = CIRCLE
+                symbols.pop(clicked_symbol + 1)
                 player_points[0] += 1
-                return
-            index += 1
-    # Find the first occurrence of OO=X or OX=X for crosses
-    elif current_player == 1:  # Crosses
-        index = 0
-        while index < len(symbols) - 1:
-            if symbols[index] == CIRCLE and symbols[index + 1] == CIRCLE:
-                symbols[index] = CROSS
-                symbols.pop(index + 1)
+                return True
+        elif current_player == 1:  # Crosses
+            if (symbols[clicked_symbol] == CIRCLE
+                    and symbols[clicked_symbol + 1] == CIRCLE):
+                symbols[clicked_symbol] = CROSS
+                symbols.pop(clicked_symbol + 1)
                 player_points[1] += 2
-                return
-            elif symbols[index] == CIRCLE and symbols[index + 1] == CROSS:
-                symbols[index] = CROSS
-                symbols.pop(index + 1)
+                return True
+            elif (symbols[clicked_symbol] == CIRCLE
+                  and symbols[clicked_symbol + 1] == CROSS):
+                symbols[clicked_symbol] = CROSS
+                symbols.pop(clicked_symbol + 1)
                 player_points[1] += 1
-                return
-            index += 1
+                return True
+    return False  # Invalid move
 
 
 # Function to check if the game is over
-def is_game_over(symbols):
-    return len(symbols) == 1
+def is_game_over(symbols, current_player):
+    if len(symbols) == 1:
+        return True  # If only one symbol left, the game is over
+    if current_player == 0:  # Circles
+        for i in range(len(symbols) - 1):
+            if (symbols[i] == CROSS and symbols[i + 1] == CROSS) or (
+                    symbols[i] == CROSS and symbols[i + 1] == CIRCLE):
+                return False  # If XX or XO combination is found, the game is not over
+    elif current_player == 1:  # Crosses
+        for i in range(len(symbols) - 1):
+            if (symbols[i] == CIRCLE and symbols[i + 1] == CIRCLE) or (
+                    symbols[i] == CIRCLE and symbols[i + 1] == CROSS):
+                return False  # If OO or OX combination is found, the game is not over
+    return True  # If no more moves can be made, the game is over
 
 
 # Function to display the winner and provide options to restart or quit
@@ -135,9 +156,8 @@ def display_winner(screen, player_points):
         text = font.render("Player with crosses wins!", True, BLUE)
     else:
         text = font.render("It's a tie!", True, BLACK)
-    screen.blit(
-        text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 3 - text.get_height() // 2)
-    )
+    screen.blit(text, (WIDTH // 2 - text.get_width() // 2,
+                       HEIGHT // 3 - text.get_height() // 2))
 
     # Buttons for restarting or quitting
     restart_button = pygame.Rect(WIDTH // 2 - 150, HEIGHT // 2 + 50, 300, 50)
@@ -152,7 +172,8 @@ def display_winner(screen, player_points):
         restart_button.centerx,
         restart_button.centery,
     )
-    draw_text(screen, "Quit", font, BLACK, quit_button.centerx, quit_button.centery)
+    draw_text(screen, "Quit", font, BLACK, quit_button.centerx,
+              quit_button.centery)
 
     pygame.display.flip()
 
@@ -172,7 +193,7 @@ def display_winner(screen, player_points):
 # Function to initialize the game
 def start_game():
     symbol_length = 0
-    input_box = pygame.Rect(WIDTH // 2 - 100, HEIGHT // 2 - 20, 200, 40)
+    input_box = pygame.Rect(100, HEIGHT // 2 - 20, 200, 40)
     font = pygame.font.Font(None, 32)
     color_inactive = pygame.Color("lightskyblue3")
     color_active = pygame.Color("dodgerblue2")
@@ -182,10 +203,6 @@ def start_game():
     running = True
     current_player = 0  # 0 for circles, 1 for crosses
     player_points = [0, 0]
-
-    # Buttons for each player's moves
-    circle_button1 = pygame.Rect(100, 100, 100, 50)
-    cross_button1 = pygame.Rect(WIDTH - 200, 100, 100, 50)
 
     while running:
         for event in pygame.event.get():
@@ -208,7 +225,9 @@ def start_game():
                                 raise ValueError
                             running = False
                         except ValueError:
-                            print("Invalid input! Length must be between 15 and 25.")
+                            print(
+                                "Invalid input! Length must be between 15 and 25."
+                            )
                         text = ""
                     elif event.key == pygame.K_BACKSPACE:
                         text = text[:-1]
@@ -222,14 +241,16 @@ def start_game():
             "Enter the length of the symbol string (15-25):",
             font,
             BLACK,
-            WIDTH // 2,
+            100,
             HEIGHT // 2 - 50,
         )
-        draw_text(screen, text, font, BLACK, input_box.x + 100, input_box.y + 5)
+        draw_text(screen, text, font, BLACK, input_box.x + 100,
+                  input_box.y + 5)
         input_box.w = max(200, font.size(text)[0] + 10)
         pygame.display.flip()
 
     symbols = generate_symbols(symbol_length)
+    symbol_rects = draw_symbols(symbols)  # Get rectangles between symbols
 
     while True:
         for event in pygame.event.get():
@@ -241,25 +262,25 @@ def start_game():
                     pygame.quit()
                     sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if current_player == 0:  # Circles
-                    if circle_button1.collidepoint(event.pos):
-                        make_move(symbols, player_points, current_player)
-                        current_player = (current_player + 1) % 2
-                elif current_player == 1:  # Crosses
-                    if cross_button1.collidepoint(event.pos):
-                        make_move(symbols, player_points, current_player)
-                        current_player = (current_player + 1) % 2
-
-        # Print current symbols to console
-        print("Current symbols:", symbols)
+                # Check if any symbol was clicked
+                for symbols_clicked, rect in enumerate(symbol_rects):
+                    if rect.collidepoint(event.pos):
+                        print("Symbol clicked:", symbols_clicked)
+                        if make_move(symbols, player_points, current_player,
+                                     symbols_clicked):
+                            current_player = (
+                                current_player + 1
+                            ) % 2  # Switch to next player only if move is valid
+                        break  # Exit the loop after processing the click
 
         # Draw everything
         screen.fill(WHITE)
         draw_symbols(symbols)
         draw_scores(player_points)  # Draw scores
+        display_player_turn(current_player)
 
         # Check for game over
-        if is_game_over(symbols):
+        if is_game_over(symbols, current_player):
             restart = display_winner(screen, player_points)
             if restart:
                 return  # Restart game
@@ -267,16 +288,6 @@ def start_game():
                 pygame.quit()
                 sys.exit()
 
-        display_player_turn(current_player)  # Display current player's turn
-        # Draw buttons
-        pygame.draw.rect(screen, RED, circle_button1)
-        pygame.draw.rect(screen, BLUE, cross_button1)
-        draw_text(
-            screen, "Turn", font, BLACK, circle_button1.x + 50, circle_button1.y + 15
-        )
-        draw_text(
-            screen, "Turn", font, BLACK, cross_button1.x + 50, cross_button1.y + 15
-        )
         pygame.display.flip()
         clock.tick(FPS)
 
