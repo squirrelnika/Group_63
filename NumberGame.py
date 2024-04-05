@@ -169,11 +169,11 @@ def display_winner(screen, player_points):
         "Restart Game",
         font,
         BLACK,
-        restart_button.centerx,
-        restart_button.centery,
+        restart_button.x,
+        restart_button.y,
     )
-    draw_text(screen, "Quit", font, BLACK, quit_button.centerx,
-              quit_button.centery)
+    draw_text(screen, "Quit", font, BLACK, quit_button.x,
+              quit_button.y)
 
     pygame.display.flip()
 
@@ -184,7 +184,7 @@ def display_winner(screen, player_points):
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if restart_button.collidepoint(event.pos):
-                    return True  # Restart game
+                    return start_game()  # Restart game
                 elif quit_button.collidepoint(event.pos):
                     pygame.quit()
                     sys.exit()
@@ -281,12 +281,7 @@ def start_game():
 
         # Check for game over
         if is_game_over(symbols, current_player):
-            restart = display_winner(screen, player_points)
-            if restart:
-                return  # Restart game
-            else:
-                pygame.quit()
-                sys.exit()
+            display_winner(screen, player_points)
 
         pygame.display.flip()
         clock.tick(FPS)
