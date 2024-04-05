@@ -154,19 +154,18 @@ def build_game_tree(node, player, depth):
         build_game_tree(child_node, next_player, depth-1)
 
 #Function for player to make move
-def player_move(clicked_symbol, node):
-    for child in node.children:
+def player_move(clicked_symbol, game_path, level):
+    for child in game_path[level].children:
         if child[2] == clicked_symbol:
+            game_path.append(child)
             return True
         else:
             return False
         
 #Function for computer to make move/ to be edited
-def computer_move(node):
-    for child in node.children:
+def computer_move(level, game_path):
+    for child in game_path[level].children: #gives all current level possible moves
         pass
-
-
 
 # Function to make a move and update points
 def make_move(symbols, player_points, current_player, clicked_symbol):
@@ -271,6 +270,9 @@ def start_game():
     running = True
     current_player = "O"  # 0 for circles, 1 for crosses
     player_points = [0, 0]
+    human = True
+    level = 0
+    game_path = []
 
     while running:
         for event in pygame.event.get():
@@ -322,6 +324,7 @@ def start_game():
 
     # Create the root node with the initial board state
     root = TreeNode(symbols, player_points)
+    game_path.append(root)
     
     # Build the game tree 3 levels
     build_game_tree(root, current_player, 3)
@@ -335,14 +338,23 @@ def start_game():
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                # Check if any symbol was clicked
-                for symbols_clicked, rect in enumerate(symbol_rects):
-                    if rect.collidepoint(event.pos):
-                        print("Symbol clicked:", symbols_clicked)
-                        if make_move(symbols, player_points, current_player,symbols_clicked):
-                            current_player = "O" if current_player == "X" else "X"  # Switch to next player only if move is valid
-                        break  # Exit the loop after processing the click
+            
+            if human:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    # Check if any symbol was clicked
+                    for symbols_clicked, rect in enumerate(symbol_rects):
+                        if rect.collidepoint(event.pos):
+                            print("Symbol clicked:", symbols_clicked)
+                            if player_move(level, game_path, symbols_clicked):
+                                level +=1
+                                human = False
+                            break  # Exit the loop after processing the click
+            else:
+                if computer_move(level, game_path):
+                    level +=1
+                    human = True
+                break    
+            
 
         # Draw everything
         screen.fill(WHITE)
