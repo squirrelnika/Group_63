@@ -323,6 +323,7 @@ def start_game():
                                 player_points = game_path[level].score
                                 human = False
                                 print(symbols)
+                                current_player = "O" if current_player == "X" else "X"
                             break  # Exit the loop after processing the click
             else:
                 if computer_move(level, game_path):
@@ -331,6 +332,7 @@ def start_game():
                     player_points = game_path[level].score
                     human = True
                     print(symbols)
+                    current_player = "O" if current_player == "X" else "X"
                 break    
             
 
