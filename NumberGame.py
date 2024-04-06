@@ -1,6 +1,7 @@
 import pygame
 import random
 import sys
+import time
 
 # Initialize Pygame
 pygame.init()
@@ -77,9 +78,9 @@ def draw_scores(player_points):
 def display_player_turn(player):
     font = pygame.font.SysFont(None, 36)
     if player == "O":
-        text = font.render("Player's Turn: Circles", True, RED)
+        text = font.render("Turn: Circles", True, RED)
     else:
-        text = font.render("Player's Turn: Crosses", True, BLUE)
+        text = font.render("Turn: Crosses", True, BLUE)
     screen.blit(text, (WIDTH // 2 - 200, 50))  # Display at the top center
 
     # Additional text below player's turn display
@@ -165,6 +166,7 @@ def player_move(level, game_path, clicked_symbol):
         
 #Function for computer to make move/ to be edited
 def computer_move(level, game_path):
+    time.sleep(2) #add 2 second delay 
     child = game_path[level].children[0]
     game_path.append(child)
     return True
@@ -228,6 +230,35 @@ def display_winner(screen, player_points):
                 elif quit_button.collidepoint(event.pos):
                     pygame.quit()
                     sys.exit()
+                    
+def select_player_type_screen():
+    font = pygame.font.Font(None, 36)
+    screen.fill(WHITE)
+    draw_text(screen, "Who starts the game?", font, BLACK, WIDTH // 2 - 150, HEIGHT // 4)
+    
+    human_button = pygame.Rect(WIDTH // 2 - 150, HEIGHT // 2 - 50, 300, 50)
+    computer_button = pygame.Rect(WIDTH // 2 - 150, HEIGHT // 2 + 50, 300, 50)
+    
+    pygame.draw.rect(screen, GRAY, human_button)
+    pygame.draw.rect(screen, GRAY, computer_button)
+    
+    draw_text(screen, "Human", font, BLACK, human_button.x + 100, human_button.y + 10)
+    draw_text(screen, "Computer", font, BLACK, computer_button.x + 80, computer_button.y + 10)
+    
+    pygame.display.flip()
+    
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if human_button.collidepoint(event.pos):
+                    print("Human")
+                    return True  # Human starts the game
+                elif computer_button.collidepoint(event.pos):
+                    print("Computer")
+                    return False  # Computer starts the game
 
 # Function to initialize the game
 def start_game():
@@ -240,11 +271,12 @@ def start_game():
     active = False
     text = ""
     running = True
-    current_player = "O"  # 0 for circles, 1 for crosses
+    current_player = "O"
     player_points = [0, 0]
-    human = True
+    human = select_player_type_screen()
     level = 0
     game_path = []
+    
 
     while running:
         for event in pygame.event.get():
