@@ -65,37 +65,61 @@ def build_game_tree(node, player, depth):
         build_game_tree(child_node, next_player, depth-1)
 
 
-# Initial symbols list
-initial_symbols = ["O","X","O","X","X","O","X","X","O"]
-initial_score = [0,0]
+def minimax(node, is_maximizing, depth):
+    # Terminal condition
+    if node.children == None or depth == 0:
+        return node.score
 
-# Create the root node with the initial board state
-root = TreeNode(initial_symbols, initial_score)
+    if is_maximizing:
+        best_score = -9999999
+        for child in node.children:
+            score = minimax(child, False, depth-1)
+            best_score = max(best_score, score)
+        return best_score
+    else:
+        best_score = 9999999
+        for child in node.children:
+            score = minimax(child, True, depth-1)
+            best_score = min(best_score, score)
+        return best_score
 
-# Build the game tree
-build_game_tree(root, "O", 2)
 
-# Print the initial symbols and the first level of child moves
-print("Initial symbols:")
-print(initial_symbols)
-print("Initial score:")
-print(initial_score)
+def main():
+    # Initial symbols list
+    initial_symbols = ["X", "O", "X", "X", "X", "O"]
+    initial_score = [0,0]
 
-for child in root.children:
-    print("Child symbols after one move:")
-    print(child.state)
-    print()
-    print(child.score)
-    print()
-    for grandchild in child.children:
-        print("Grandchild symbols after one move:")
-        print(grandchild.state)
+    # Create the root node with the initial board state
+    root = TreeNode(initial_symbols, initial_score)
+
+    # Build the game tree
+    build_game_tree(root, "O", 2)
+
+    # Print the initial symbols and the first level of child moves
+    print("Initial symbols:")
+    print(initial_symbols)
+    print("Initial score:")
+    print(initial_score)
+
+    for child in root.children:
+        print("Child symbols after one move:")
+        print(child.state)
         print()
-        print(grandchild.score)
+        print(child.score)
         print()
-        print("Greatgrandchild symbols after one move:")
-        for greatgrandchild in grandchild.children:
-            print(greatgrandchild.state)
+        for grandchild in child.children:
+            print("Grandchild symbols after one move:")
+            print(grandchild.state)
             print()
-            print(greatgrandchild.score)
+            print(grandchild.score)
             print()
+            print("Greatgrandchild symbols after one move:")
+            for greatgrandchild in grandchild.children:
+                print(greatgrandchild.state)
+                print()
+                print(greatgrandchild.score)
+                print()
+
+
+if __name__ == '__main__':
+    main()
