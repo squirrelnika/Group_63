@@ -343,6 +343,10 @@ def start_game():
         # Check for game over
         if is_game_over(symbols, current_player):
             display_winner(screen, player_points)
+        
+        if level % 6 == 0:
+            build_game_tree(game_path[level], current_player, 6)
+
 
         pygame.display.flip()
         clock.tick(FPS)
