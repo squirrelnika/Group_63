@@ -103,35 +103,35 @@ class TreeNode:
         return child_node
     
 # Function to generate all possible next moves
-def generate_moves(symbols, points, player):
+def generate_moves(start_symbols, points, player):
     moves = []
-    for i in range(len(symbols)-1):
+    for i in range(len(start_symbols)-1):
         temp_score = points.copy() #japaskatas
         if player == "O":
-            if symbols[i] == "X" and symbols[i+1] == "X":
-                new_symbols = symbols.copy()
+            if start_symbols[i] == "X" and start_symbols[i+1] == "X":
+                new_symbols = start_symbols.copy()
                 new_symbols[i] = player
                 new_symbols.pop(i+1)
                 temp_score[0]+=2
                 move = [new_symbols,temp_score, i]
                 moves.append(move)
-            elif symbols[i] == "X" and symbols[i+1] == "O":
-                new_symbols = symbols.copy()
+            elif start_symbols[i] == "X" and start_symbols[i+1] == "O":
+                new_symbols = start_symbols.copy()
                 new_symbols[i] = player
                 new_symbols.pop(i+1)
                 temp_score[0]+=1
                 move = [new_symbols,temp_score, i]
                 moves.append(move)
         else:
-            if symbols[i] == "O" and symbols[i+1] == "O":
-                new_symbols = symbols.copy()
+            if start_symbols[i] == "O" and start_symbols[i+1] == "O":
+                new_symbols = start_symbols.copy()
                 new_symbols[i] = player
                 new_symbols.pop(i+1)
                 temp_score[1]+=2
                 move = [new_symbols,temp_score, i]
                 moves.append(move)
-            elif symbols[i] == "O" and symbols[i+1] == "X":
-                new_symbols = symbols.copy()
+            elif start_symbols[i] == "O" and start_symbols[i+1] == "X":
+                new_symbols = start_symbols.copy()
                 new_symbols[i] = player
                 new_symbols.pop(i+1)
                 temp_score[1]+=1
@@ -154,50 +154,22 @@ def build_game_tree(node, player, depth):
         build_game_tree(child_node, next_player, depth-1)
 
 #Function for player to make move
-def player_move(clicked_symbol, game_path, level):
+def player_move(level, game_path, clicked_symbol):
     for child in game_path[level].children:
-        if child[2] == clicked_symbol:
+        if child.chosen_symbol == clicked_symbol:
             game_path.append(child)
-            return True
-        else:
-            return False
+            break
+    else:
+        return False
+    return True
         
 #Function for computer to make move/ to be edited
 def computer_move(level, game_path):
-    for child in game_path[level].children: #gives all current level possible moves
-        pass
+    child = game_path[level].children[0]
+    game_path.append(child)
+    return True
+    #for child in game_path[level].children: #gives all current level possible moves
 
-# Function to make a move and update points
-def make_move(symbols, player_points, current_player, clicked_symbol):
-    # Check if the clicked symbols are within the bounds of the current symbol array
-    if clicked_symbol < len(symbols) - 1:
-        if current_player == "O":  # Circles
-            if (symbols[clicked_symbol] == "X"
-                    and symbols[clicked_symbol + 1] == "X"):
-                symbols[clicked_symbol] = "O"
-                symbols.pop(clicked_symbol + 1)
-                player_points[0] += 2
-                return True
-            elif (symbols[clicked_symbol] == "X"
-                  and symbols[clicked_symbol + 1] == "O"):
-                symbols[clicked_symbol] = "O"
-                symbols.pop(clicked_symbol + 1)
-                player_points[0] += 1
-                return True
-        elif current_player == "X":  # Crosses
-            if (symbols[clicked_symbol] == "O"
-                    and symbols[clicked_symbol + 1] == "O"):
-                symbols[clicked_symbol] = "X"
-                symbols.pop(clicked_symbol + 1)
-                player_points[1] += 2
-                return True
-            elif (symbols[clicked_symbol] == "O"
-                  and symbols[clicked_symbol + 1] == "X"):
-                symbols[clicked_symbol] = "X"
-                symbols.pop(clicked_symbol + 1)
-                player_points[1] += 1
-                return True
-    return False  # Invalid move
 
 # Function to check if the game is over
 def is_game_over(symbols, current_player):
@@ -324,10 +296,10 @@ def start_game():
 
     # Create the root node with the initial board state
     root = TreeNode(symbols, player_points)
-    game_path.append(root)
     
     # Build the game tree 3 levels
-    build_game_tree(root, current_player, 3)
+    build_game_tree(root, current_player, 6)
+    game_path.append(root)
 
     while True:
         for event in pygame.event.get():
@@ -347,12 +319,18 @@ def start_game():
                             print("Symbol clicked:", symbols_clicked)
                             if player_move(level, game_path, symbols_clicked):
                                 level +=1
+                                symbols = game_path[level].state
+                                player_points = game_path[level].score
                                 human = False
+                                print(symbols)
                             break  # Exit the loop after processing the click
             else:
                 if computer_move(level, game_path):
                     level +=1
+                    symbols = game_path[level].state
+                    player_points = game_path[level].score
                     human = True
+                    print(symbols)
                 break    
             
 
