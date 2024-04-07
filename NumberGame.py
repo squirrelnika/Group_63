@@ -323,6 +323,7 @@ def start_game():
     player_points = [0, 0]
     level = 0
     game_path = []
+    tree_depth = 4 #var mainīt cik tālu tiek ģenerēts koks
 
     human = select_player_type_screen()
     symbol_length = ask_symbol_length()
@@ -330,11 +331,12 @@ def start_game():
     symbol_rects = draw_symbols(symbols)  # Get rectangles between symbols
 
     # Create the root node with the initial board state
-    root = TreeNode(generate_symbols(symbol_length), player_points)
+    root = TreeNode(symbols, player_points)
 
     # Build the game tree 3 levels
-    build_game_tree(root, current_player, 6)
+    build_game_tree(root, current_player, tree_depth)
     game_path.append(root)
+    print(symbols)
 
     while True:
         for event in pygame.event.get():
@@ -356,9 +358,9 @@ def start_game():
                                 level +=1
                                 symbols = game_path[level].state
                                 player_points = game_path[level].score
-                                human = False
                                 print(symbols)
                                 current_player = "O" if current_player == "X" else "X"
+                                human = False
                             break
             else:
                 if computer_move(level, game_path):
@@ -380,8 +382,8 @@ def start_game():
         if is_game_over(symbols, current_player):
             display_winner(screen, player_points)
 
-        if level % 6 == 0:
-            build_game_tree(game_path[level], current_player, 6)
+        if level % tree_depth == 0:
+            build_game_tree(game_path[level], current_player, tree_depth)
 
         pygame.display.flip()
         clock.tick(FPS)
