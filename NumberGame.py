@@ -102,7 +102,7 @@ class TreeNode:
         child_node = TreeNode(child_state, child_score, chosen_symbol, self)
         self.children.append(child_node)
         return child_node
-    
+
 # Function to generate all possible next moves
 def generate_moves(start_symbols, points, player):
     moves = []
@@ -163,21 +163,20 @@ def player_move(level, game_path, clicked_symbol):
     else:
         return False
     return True
-        
+
 #Function for computer to make move/ to be edited
 def computer_move(level, game_path):
-    time.sleep(2) #add 2 second delay 
+    time.sleep(2) #add 2 second delay
     child = game_path[level].children[0]
     game_path.append(child)
     return True
     #for child in game_path[level].children: #gives all current level possible moves
 
-
 # Function to check if the game is over
 def is_game_over(symbols, current_player):
     if len(symbols) == 1:
         return True  # If only one symbol left, the game is over
-    if current_player == "O":  # Circles
+    if current_player == "O":
         for i in range(len(symbols) - 1):
             if (symbols[i] == "X" and symbols[i + 1] == "X") or (
                     symbols[i] == "X" and symbols[i + 1] == "O"):
@@ -214,8 +213,7 @@ def display_winner(screen, player_points):
         restart_button.x,
         restart_button.y,
     )
-    draw_text(screen, "Quit", font, BLACK, quit_button.x,
-              quit_button.y)
+    draw_text(screen, "Quit", font, BLACK, quit_button.x, quit_button.y)
 
     pygame.display.flip()
 
@@ -230,23 +228,23 @@ def display_winner(screen, player_points):
                 elif quit_button.collidepoint(event.pos):
                     pygame.quit()
                     sys.exit()
-                    
+
 def select_player_type_screen():
     font = pygame.font.Font(None, 36)
     screen.fill(WHITE)
     draw_text(screen, "Who starts the game?", font, BLACK, WIDTH // 2 - 150, HEIGHT // 4)
-    
+
     human_button = pygame.Rect(WIDTH // 2 - 150, HEIGHT // 2 - 50, 300, 50)
     computer_button = pygame.Rect(WIDTH // 2 - 150, HEIGHT // 2 + 50, 300, 50)
-    
+
     pygame.draw.rect(screen, GRAY, human_button)
     pygame.draw.rect(screen, GRAY, computer_button)
-    
+
     draw_text(screen, "Human", font, BLACK, human_button.x + 100, human_button.y + 10)
     draw_text(screen, "Computer", font, BLACK, computer_button.x + 80, computer_button.y + 10)
-    
+
     pygame.display.flip()
-    
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -260,8 +258,8 @@ def select_player_type_screen():
                     print("Computer")
                     return False  # Computer starts the game
 
-# Function to initialize the game
-def start_game():
+# Function to ask player for symbol length
+def ask_symbol_length():
     symbol_length = 0
     input_box = pygame.Rect(100, HEIGHT // 2 - 20, 200, 40)
     font = pygame.font.Font(None, 32)
@@ -271,12 +269,6 @@ def start_game():
     active = False
     text = ""
     running = True
-    current_player = "O"
-    player_points = [0, 0]
-    human = select_player_type_screen()
-    level = 0
-    game_path = []
-    
 
     while running:
         for event in pygame.event.get():
@@ -323,12 +315,23 @@ def start_game():
         input_box.w = max(200, font.size(text)[0] + 10)
         pygame.display.flip()
 
+    return symbol_length
+
+# Function to initialize the game
+def start_game():
+    current_player = "O"
+    player_points = [0, 0]
+    level = 0
+    game_path = []
+
+    human = select_player_type_screen()
+    symbol_length = ask_symbol_length()
     symbols = generate_symbols(symbol_length)
     symbol_rects = draw_symbols(symbols)  # Get rectangles between symbols
 
     # Create the root node with the initial board state
-    root = TreeNode(symbols, player_points)
-    
+    root = TreeNode(generate_symbols(symbol_length), player_points)
+
     # Build the game tree 3 levels
     build_game_tree(root, current_player, 6)
     game_path.append(root)
@@ -342,7 +345,7 @@ def start_game():
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
-            
+
             if human:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     # Check if any symbol was clicked
@@ -356,7 +359,7 @@ def start_game():
                                 human = False
                                 print(symbols)
                                 current_player = "O" if current_player == "X" else "X"
-                            break  # Exit the loop after processing the click
+                            break
             else:
                 if computer_move(level, game_path):
                     level +=1
@@ -365,8 +368,7 @@ def start_game():
                     human = True
                     print(symbols)
                     current_player = "O" if current_player == "X" else "X"
-                break    
-            
+                break
 
         # Draw everything
         screen.fill(WHITE)
@@ -377,10 +379,9 @@ def start_game():
         # Check for game over
         if is_game_over(symbols, current_player):
             display_winner(screen, player_points)
-        
+
         if level % 6 == 0:
             build_game_tree(game_path[level], current_player, 6)
-
 
         pygame.display.flip()
         clock.tick(FPS)
