@@ -167,9 +167,22 @@ def player_move(level, game_path, clicked_symbol):
 #Function for computer to make move/ to be edited
 def computer_move(level, game_path):
     time.sleep(2) #add 2 second delay
-    child = game_path[level].children[0]
-    game_path.append(child)
+
+    best_child = TreeNode(None, None)
+    best_value = -999999
+
+    for child in game_path[level].children:
+        current_value = minimax(child, 2)
+        if current_value > best_value:
+            best_child = child
+            best_value = current_value
+    
+    game_path.append(best_child)
     return True
+
+    # child = game_path[level].children[0]
+    # game_path.append(child)
+    # return True
     #for child in game_path[level].children: #gives all current level possible moves
 
 # Function to check if the game is over
@@ -316,6 +329,29 @@ def ask_symbol_length():
         pygame.display.flip()
 
     return symbol_length
+
+
+# Minimax algorithm
+def minimax(node, is_maximizing, depth):
+    # Terminal condition
+    if node.children == None or depth == 0:
+        # TODO: pievienot heiristiska vertejuma aprekinu
+        # node.value = ...
+        return node.value
+
+    if is_maximizing:
+        best_value = -9999999
+        for child in node.children:
+            value = minimax(child, False, depth-1)
+            best_value = max(best_value, value)
+        return best_value
+    else:
+        best_value = 9999999
+        for child in node.children:
+            value = minimax(child, True, depth-1)
+            best_value = min(best_value, value)
+        return best_value
+
 
 # Function to initialize the game
 def start_game():
