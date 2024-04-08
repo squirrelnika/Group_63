@@ -171,18 +171,17 @@ def computer_move(level, game_path):
     best_child = TreeNode(None, None)
     best_value = -999999
 
-    for child in game_path[level].children:
-        current_value = minimax(child, 2)
-        if current_value > best_value:
-            best_child = child
-            best_value = current_value
-    
-    game_path.append(best_child)
-    return True
-
-    # child = game_path[level].children[0]
-    # game_path.append(child)
+    # for child in game_path[level].children:
+    #     current_value = minimax(child, 2)
+    #     if current_value > best_value:
+    #         best_child = child
+    #         best_value = current_value
+    # game_path.append(best_child)
     # return True
+
+    child = game_path[level].children[0]
+    game_path.append(child)
+    return True
     #for child in game_path[level].children: #gives all current level possible moves
 
 # Function to check if the game is over
