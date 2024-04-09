@@ -143,8 +143,8 @@ def generate_moves(start_symbols, points, player):
 
 # Heuristic function calculation
 def calculate_heuristic(symbols, score):
-    ai_combinations = 0;
-    hu_combinations = 0;
+    ai_combinations = 0
+    hu_combinations = 0
     for i in range(len(symbols) - 1):
         if symbols[i:i+2] == ["X", "X"] or symbols[i:i+2] == ["X", "O"]:
             ai_combinations += 1
@@ -154,7 +154,7 @@ def calculate_heuristic(symbols, score):
     return score[0]-score[1] - hu_combinations * 1 + ai_combinations * 1
 
 
-# Recursive function to build the game tree
+# Recursive function to build the initial game tree
 def build_game_tree(node, player, depth):
     if depth == 0:
         return
@@ -167,6 +167,14 @@ def build_game_tree(node, player, depth):
     for move in moves:
         child_node = node.add_child(move[0],move[1],move[2])
         build_game_tree(child_node, next_player, depth-1)
+
+#Function to add next level to the game tree
+def add_game_tree_level(node, player):
+    for child in node.children:
+        for grandchild in child.children:
+            moves = generate_moves(grandchild.stae, grandchild.score, player)
+            for move in moves:
+                node.add_child(move[0],move[1],move[2])
 
 #Function for player to make move
 def player_move(level, game_path, clicked_symbol):
@@ -377,7 +385,6 @@ def start_game():
     player_points = [0, 0]
     level = 0
     game_path = []
-    tree_depth = 4 #var mainīt cik tālu tiek ģenerēts koks
 
     human = select_player_type_screen()
     symbol_length = ask_symbol_length()
@@ -387,10 +394,9 @@ def start_game():
     # Create the root node with the initial board state
     root = TreeNode(symbols, player_points)
 
-    # Build the game tree 3 levels
-    build_game_tree(root, current_player, tree_depth)
+    # Build the game tree 4 levels
+    build_game_tree(root, current_player, 4)
     game_path.append(root)
-    print(symbols)
 
     while True:
         for event in pygame.event.get():
@@ -436,8 +442,8 @@ def start_game():
         if is_game_over(symbols, current_player):
             display_winner(screen, player_points)
 
-        if level % tree_depth == 0:
-            build_game_tree(game_path[level], current_player, tree_depth)
+        #add next tree level
+        add_game_tree_level(game_path[level], current_player)
 
         pygame.display.flip()
         clock.tick(FPS)
