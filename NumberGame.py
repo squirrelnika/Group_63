@@ -177,19 +177,24 @@ def player_move(level, game_path, clicked_symbol):
     return True
 
 #Function for computer to make move/ to be edited
-def computer_move(level, game_path):
+def computer_move(level, game_path, current_player):
     time.sleep(2) #add 2 second delay
 
-    best_child = TreeNode(None, None)
+    build_game_tree(game_path[level], current_player, 5)
+    best_child = None
     best_value = -999999
-
-    # for child in game_path[level].children:
-    #     current_value = minimax(child, 2)
-    #     if current_value > best_value:
-    #         best_child = child
-    #         best_value = current_value
-    # game_path.append(best_child)
-    # return True
+    print(f"\n\nlevel: {level}")
+    for child in game_path[level].children:
+        current_value = minimax(child, True, 3)
+        if current_value > best_value:
+            best_child = child
+            best_value = current_value
+            print(f"move: {best_child.state}")
+            print(f"value: {best_value}")
+    print(f"best_move: {best_child.state}")
+    print(f"best value: {best_value}")
+    game_path.append(best_child)
+    return True
 
     child = game_path[level].children[0]
     game_path.append(child)
@@ -346,8 +351,7 @@ def ask_symbol_length():
 def minimax(node, is_maximizing, depth):
     # Terminal condition
     if node.children == None or depth == 0:
-        # TODO: pievienot heiristiska vertejuma aprekinu
-        # node.value = ...
+        node.value = calculate_heuristic(node.state, node.score)
         return node.value
 
     if is_maximizing:
@@ -410,7 +414,7 @@ def start_game():
                                 human = False
                             break
             else:
-                if computer_move(level, game_path):
+                if computer_move(level, game_path, current_player):
                     level +=1
                     symbols = game_path[level].state
                     player_points = game_path[level].score
