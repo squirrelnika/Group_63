@@ -90,7 +90,7 @@ def display_player_turn(player):
 
 #Class to generate game tree
 class TreeNode:
-    def __init__(self, state, score, chosen_symbol=None, value=None, parent=None):
+    def __init__(self, state, score, chosen_symbol=None, parent=None, value=None):
         self.state = state
         self.score = score #player score
         self.value = value #heuristic value
@@ -140,8 +140,9 @@ def generate_moves(start_symbols, points, player):
                 moves.append(move)
     return moves
 
+
 # Heuristic function calculation
-def calculate_heuristic(symbols, score):
+def calculate_heuristic(symbols, is_maximizing ,score):
     ai_combinations = 0;
     hu_combinations = 0;
     for i in range(len(symbols) - 1):
@@ -149,8 +150,11 @@ def calculate_heuristic(symbols, score):
             ai_combinations += 1
         elif symbols[i:i+2] == ["O", "O"] or symbols[i:i+2] == ["O", "X"]:
             hu_combinations += 1
+    if is_maximizing:
+        return score[0]-score[1] - hu_combinations * 1 + ai_combinations * 1
+    else:
+        return score[1]-score[0] - hu_combinations * 1 + ai_combinations * 1
 
-    return score[0]-score[1] - hu_combinations * 1 + ai_combinations * 1
 
 # Recursive function to build the game tree
 def build_game_tree(node, player, depth):
@@ -177,28 +181,45 @@ def player_move(level, game_path, clicked_symbol):
     return True
 
 #Function for computer to make move/ to be edited
-def computer_move(level, game_path, current_player):
-    time.sleep(2) #add 2 second delay
+def computer_move(level, game_path, current_player, use_minimax):
+    #time.sleep(2) #add 2 second delay
 
     build_game_tree(game_path[level], current_player, 5)
     best_child = None
     best_value = -999999
+    alpha_initial = -float('inf')
+    beta_initial = float('inf')
+
+
     print(f"\n\nlevel: {level}")
+    
     for child in game_path[level].children:
-        current_value = minimax(child, True, 3)
+        if use_minimax:
+            current_value = minimax(child, True, 3)
+            print(use_minimax)
+        else:
+            print(use_minimax)
+            current_value = alpha_beta_pruning(child, alpha_initial, beta_initial, True, 3)
         if current_value > best_value:
             best_child = child
             best_value = current_value
             print(f"move: {best_child.state}")
             print(f"value: {best_value}")
-    print(f"best_move: {best_child.state}")
-    print(f"best value: {best_value}")
-    game_path.append(best_child)
-    return True
 
-    child = game_path[level].children[0]
-    game_path.append(child)
-    return True
+    try:
+        print(f"best_move: {best_child.state}")
+        print(f"best value: {best_value}")
+        game_path.append(best_child)
+        return True
+    except AttributeError as e:
+        print(f"best value: {e}")
+        child = game_path[level].children[0]
+        game_path.append(child)
+        return True
+
+    # child = game_path[level].children[0]
+    # game_path.append(child)
+    # return True
     #for child in game_path[level].children: #gives all current level possible moves
 
 # Function to check if the game is over
@@ -346,12 +367,45 @@ def ask_symbol_length():
 
     return symbol_length
 
+def select_minimax():
+    font = pygame.font.Font(None, 36)
+    screen.fill(WHITE)
+    draw_text(screen, "Which algorithm to use?", font, BLACK, WIDTH // 2 - 150, HEIGHT // 4)
+    use_minimax = True
+
+    minimax_button = pygame.Rect(WIDTH // 2 - 150, HEIGHT // 2 - 50, 300, 50)
+    alfabeta_button = pygame.Rect(WIDTH // 2 - 150, HEIGHT // 2 + 50, 300, 50)
+
+    pygame.draw.rect(screen, GRAY, minimax_button)
+    pygame.draw.rect(screen, GRAY, alfabeta_button)
+
+    draw_text(screen, "Minimax", font, BLACK, minimax_button.x + 100, minimax_button.y + 10)
+    draw_text(screen, "Alfabeta", font, BLACK, alfabeta_button.x + 80, alfabeta_button.y + 10)
+
+    pygame.display.flip()
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if minimax_button.collidepoint(event.pos):
+                    print("Minimax")
+                    return True
+                    
+                elif alfabeta_button.collidepoint(event.pos):
+                    print("Alfabeta")
+                    return False
+
 
 # Minimax algorithm
 def minimax(node, is_maximizing, depth):
+    global nodes_visited
+    nodes_visited += 1
     # Terminal condition
     if node.children == None or depth == 0:
-        node.value = calculate_heuristic(node.state, node.score)
+        node.value = calculate_heuristic(node.state, is_maximizing , node.score)
         return node.value
 
     if is_maximizing:
@@ -368,15 +422,45 @@ def minimax(node, is_maximizing, depth):
         return best_value
 
 
+def alpha_beta_pruning(node, alpha, beta, is_maximizing, depth):
+    global nodes_visited
+    nodes_visited += 1
+    # Terminal condition
+    if node.children == None or depth == 0:
+        node.value = calculate_heuristic(node.state, is_maximizing, node.score)
+        return node.value
+
+    if is_maximizing:
+        value = -float('inf')
+        for child in node.children:
+            value = max(value, alpha_beta_pruning(child, alpha, beta, False, depth-1))
+            alpha = max(alpha, value)
+            if alpha >= beta:
+                break  # Beta cut-off
+        return value
+    else:
+        value = float('inf')
+        for child in node.children:
+            value = min(value, alpha_beta_pruning(child, alpha, beta, True, depth-1))
+            beta = min(beta, value)
+            if beta <= alpha:
+                break  # Alpha cut-off
+        return value
+
+
 # Function to initialize the game
 def start_game():
+    global nodes_visited
+    nodes_visited = 0
     current_player = "O"
     player_points = [0, 0]
     level = 0
     game_path = []
     tree_depth = 4 #var mainīt cik tālu tiek ģenerēts koks
+    time_spent_on_turns = []
 
     human = select_player_type_screen()
+    use_minimax = select_minimax()
     symbol_length = ask_symbol_length()
     symbols = generate_symbols(symbol_length)
     symbol_rects = draw_symbols(symbols)  # Get rectangles between symbols
@@ -414,13 +498,17 @@ def start_game():
                                 human = False
                             break
             else:
-                if computer_move(level, game_path, current_player):
+                st = time.time()
+
+                if computer_move(level, game_path, current_player, use_minimax):
                     level +=1
                     symbols = game_path[level].state
                     player_points = game_path[level].score
                     human = True
                     print(symbols)
                     current_player = "O" if current_player == "X" else "X"
+                
+                time_spent_on_turns.append(time.time()-st)
                 break
 
         # Draw everything
@@ -431,6 +519,8 @@ def start_game():
 
         # Check for game over
         if is_game_over(symbols, current_player):
+            print(f"Average time spent on turn: {sum(time_spent_on_turns) / len(time_spent_on_turns)}")
+            print(F"Visited nodes count: {nodes_visited}")
             display_winner(screen, player_points)
 
         if level % tree_depth == 0:
@@ -440,6 +530,7 @@ def start_game():
         clock.tick(FPS)
 
 # Set up the display
+nodes_visited = 0
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Symbol Game")
 clock = pygame.time.Clock()
