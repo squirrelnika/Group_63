@@ -90,7 +90,7 @@ def display_player_turn(player):
 
 #Class to generate game tree
 class TreeNode:
-    def __init__(self, state, score, chosen_symbol=None, value=None, parent=None):
+    def __init__(self, state, score, chosen_symbol=None, parent=None, value=None):
         self.state = state
         self.score = score #player score
         self.value = value #heuristic value
@@ -172,7 +172,7 @@ def build_game_tree(node, player, depth):
 def add_game_tree_level(node, player):
     for child in node.children:
         for grandchild in child.children:
-            moves = generate_moves(grandchild.stae, grandchild.score, player)
+            moves = generate_moves(grandchild.state, grandchild.score, player)
             for move in moves:
                 node.add_child(move[0],move[1],move[2])
 
@@ -190,20 +190,23 @@ def player_move(level, game_path, clicked_symbol):
 def computer_move(level, game_path, current_player):
     time.sleep(2) #add 2 second delay
 
-    build_game_tree(game_path[level], current_player, 5)
+    #build_game_tree(game_path[level], current_player, 3)
+
     best_child = None
     best_value = -999999
 
     print(f"\n\nlevel: {level}")
+
     for child in game_path[level].children:
         current_value = minimax(child, True, 3)
+        print(f"current_value: {current_value}")
+        # print(f"move: {child.state}")
+        # print(f"value: {child.value}")
         if current_value > best_value:
             best_child = child
             best_value = current_value
-            print(f"move: {best_child.state}")
-            print(f"value: {best_value}")
-    print(f"best_move: {best_child.state}")
     print(f"best value: {best_value}")
+    print(f"best_move: {best_child.state}")
     game_path.append(best_child)
     return True
 
@@ -211,6 +214,26 @@ def computer_move(level, game_path, current_player):
     # game_path.append(child)
     # return True
     #for child in game_path[level].children: #gives all current level possible moves
+
+# Minimax algorithm
+def minimax(node, is_maximizing, depth):
+    # Terminal condition
+    if node.children == None or depth == 0:
+        node.value = calculate_heuristic(node.state, node.score)
+        return node.value
+
+    if is_maximizing:
+        best_value = -9999999
+        for child in node.children:
+            child.value = minimax(child, False, depth-1)
+            best_value = max(best_value, child.value)
+        return best_value
+    else:
+        best_value = 9999999
+        for child in node.children:
+            child.value = minimax(child, True, depth-1)
+            best_value = min(best_value, child.value)
+        return best_value
 
 # Function to check if the game is over
 def is_game_over(symbols, current_player):
@@ -356,27 +379,6 @@ def ask_symbol_length():
         pygame.display.flip()
 
     return symbol_length
-
-
-# Minimax algorithm
-def minimax(node, is_maximizing, depth):
-    # Terminal condition
-    if node.children == None or depth == 0:
-        node.value = calculate_heuristic(node.state, node.score)
-        return node.value
-
-    if is_maximizing:
-        best_value = -9999999
-        for child in node.children:
-            value = minimax(child, False, depth-1)
-            best_value = max(best_value, value)
-        return best_value
-    else:
-        best_value = 9999999
-        for child in node.children:
-            value = minimax(child, True, depth-1)
-            best_value = min(best_value, value)
-        return best_value
 
 
 # Function to initialize the game
