@@ -140,6 +140,20 @@ def generate_moves(start_symbols, points, player):
                 moves.append(move)
     return moves
 
+
+# Heuristic function calculation
+def calculate_heuristic(symbols, score):
+    ai_combinations = 0;
+    hu_combinations = 0;
+    for i in range(len(symbols) - 1):
+        if symbols[i:i+2] == ["X", "X"] or symbols[i:i+2] == ["X", "O"]:
+            ai_combinations += 1
+        elif symbols[i:i+2] == ["O", "O"] or symbols[i:i+2] == ["O", "X"]:
+            hu_combinations += 1
+
+    return score[0]-score[1] - hu_combinations * 1 + ai_combinations * 1
+
+
 # Recursive function to build the game tree
 def build_game_tree(node, player, depth):
     if depth == 0:
@@ -165,23 +179,29 @@ def player_move(level, game_path, clicked_symbol):
     return True
 
 #Function for computer to make move/ to be edited
-def computer_move(level, game_path):
+def computer_move(level, game_path, current_player):
     time.sleep(2) #add 2 second delay
 
-    best_child = TreeNode(None, None)
+    build_game_tree(game_path[level], current_player, 5)
+    best_child = None
     best_value = -999999
 
-    # for child in game_path[level].children:
-    #     current_value = minimax(child, 2)
-    #     if current_value > best_value:
-    #         best_child = child
-    #         best_value = current_value
-    # game_path.append(best_child)
-    # return True
-
-    child = game_path[level].children[0]
-    game_path.append(child)
+    print(f"\n\nlevel: {level}")
+    for child in game_path[level].children:
+        current_value = minimax(child, True, 3)
+        if current_value > best_value:
+            best_child = child
+            best_value = current_value
+            print(f"move: {best_child.state}")
+            print(f"value: {best_value}")
+    print(f"best_move: {best_child.state}")
+    print(f"best value: {best_value}")
+    game_path.append(best_child)
     return True
+
+    # child = game_path[level].children[0]
+    # game_path.append(child)
+    # return True
     #for child in game_path[level].children: #gives all current level possible moves
 
 # Function to check if the game is over
@@ -334,8 +354,7 @@ def ask_symbol_length():
 def minimax(node, is_maximizing, depth):
     # Terminal condition
     if node.children == None or depth == 0:
-        # TODO: pievienot heiristiska vertejuma aprekinu
-        # node.value = ...
+        node.value = calculate_heuristic(node.state, node.score)
         return node.value
 
     if is_maximizing:
@@ -398,7 +417,7 @@ def start_game():
                                 human = False
                             break
             else:
-                if computer_move(level, game_path):
+                if computer_move(level, game_path, current_player):
                     level +=1
                     symbols = game_path[level].state
                     player_points = game_path[level].score
